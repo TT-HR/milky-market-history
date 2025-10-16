@@ -16,4 +16,8 @@ def get_item_cost():
     names_param = request.args.getlist("names")
     if not names_param:
         return []
-    return build_view_data(names_param)
+    return build_view_data(
+        names_param,
+        request.args.get("start_time", ""),
+        request.args.get("end_time", ""),
+    )

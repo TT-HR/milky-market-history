@@ -15,14 +15,19 @@ def get_all_items():
 
 
 # 根据物品名构建折线图数据
-def build_view_data(names: list[str]):
+# 暂时做成单选，后续优化多选
+def build_view_data(names: list[str], start_time, ent_time):
     files = glob.glob("data/*.json")
     # 返回的数据
+    dates = []
     records = []
     for file_name in files:
         timestamp = int(os.path.splitext(os.path.basename(file_name))[0])
+        if start_time <= timestamp <= ent_time:
+            continue
         # 时间
         item_time = datetime.fromtimestamp(timestamp).strftime("%m-%d %H时")
+        dates.append(item_time)
 
         with open(file_name, "r", encoding="utf-8") as f:
             data = json.load(f)
@@ -34,32 +39,15 @@ def build_view_data(names: list[str]):
             value = get_value(name, data)
 
             if isExist:
+                # 更新已存在的记录
                 for item in isExist:
                     # 买入
                     a_data = item.setdefault("a", {}).setdefault("data", [])
-                    a = value.get("a")
-                    a_data = a_data + a
+                    a_data.extend(value.get("a", ""))
 
                     # 卖出
-                    b_data = item.get("b", {}).get("data")
-                    b = value.get("b")
-                    b_data = b_data + b
-                    records.append(
-                        {
-                            "key": name,
-                            "name": "买入",
-                            "type": "line",
-                            "stack": "Total",
-                            "data": a_data,
-                        },
-                        {
-                            "key": name,
-                            "name": "卖出",
-                            "type": "line",
-                            "stack": "Total",
-                            "data": b_data,
-                        },
-                    )
+                    b_data = item.setdefault("b", {}).setdefault("data", [])
+                    b_data.extend(value.get("b", ""))
             else:
                 records.append(
                     {
@@ -77,7 +65,7 @@ def build_view_data(names: list[str]):
                         "data": value.get("b"),
                     },
                 )
-    return records
+    return {"data": dates, "series": records}
 
 
 def get_value(k: str, data: json):
