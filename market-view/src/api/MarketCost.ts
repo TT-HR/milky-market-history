@@ -6,5 +6,9 @@ const request = axios.create({
 })
 
 export function getAllRes(){
-    return "火龙果"
+    return request.get('/api/items')
+}
+
+export function getItemCost(params: Record<string, any>){
+    return request.get('/api/item_cost',{params})
 }
